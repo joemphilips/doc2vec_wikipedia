@@ -17,7 +17,8 @@ setup(
 
         # どのpythonのバージョンで動作するか
         'Programming Language :: Python :: 3.4',
-         # 複数書く場合は、全バージョンでのテストを実行しておくこと
+        # 複数書く場合は、全バージョンでのテストを実行しておくこと
+        # toxを用いることが多い。
         'Programming Language :: Python :: 3.5',
     ],
 
@@ -31,7 +32,7 @@ setup(
 
     # dependencyを書く。PIPY上にあるパッケージに限る。
     # requirements.txtを読み込んでもよいが、余計なものを含めないように注意
-    # (requirements.txtは`pip freeze`コマンドで作成する。)
+    # (requirements.txtは`pip freeze`コマンドで作成する。その場合`pyvenv`を使う)
     install_requires=[],
 
     # PYPI以外の場所にdependencyがある場合、ここにリンクを書く
