@@ -40,11 +40,8 @@ def crowl(url, degree=2):
     result = requests.get(url)
     html = result.text
 
-    print("\t".join([url, str(degree), html]))
     bsObj = BeautifulSoup(html)
     body_content = bsObj.find("div", {"id": "bodyContent"})
-    logger.debug("body content is {} and class it's class is {}".
-                 format(body_content, body_content.__class__))
 
     content = _extractcontent(body_content)
     INFOS.add(pageinfo(url, degree, content))
