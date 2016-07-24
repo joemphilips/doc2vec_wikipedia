@@ -35,7 +35,8 @@ def crowl(url, degree=2):
     Yields:
         set (str): リンク先のurl
     """
-    global URLS, INFOS
+    global URLS
+    global INFOS
 
     result = requests.get(url)
     html = result.text
@@ -59,7 +60,7 @@ def crowl(url, degree=2):
                 new_url = link.attrs['href']
                 logger.info("found new page {} !!".format(new_url))
                 URLS.add(new_url)
-                crowl("http://ja.wikipedia.org".format(new_url),
+                crowl("http://ja.wikipedia.org{}".format(new_url),
                              degree=degree)
 
 
