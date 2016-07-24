@@ -4,6 +4,7 @@
 from bs4 import BeautifulSoup
 import requests
 import re
+from collections import namedtuple
 import logging
 logger = logging.getLogger(__name__)
 stream_handler = logging.StreamHandler()
@@ -13,8 +14,6 @@ file_handler = logging.FileHandler(filename='log.txt')
 file_handler.setLevel(logging.DEBUG)
 logger.addHandler(file_handler)
 logger.addHandler(stream_handler)
-
-from collections import namedtuple
 
 pageinfo = namedtuple("pageinfo", ["url", "degree", "body"])
 
@@ -64,8 +63,3 @@ def crowl(url, degree=2):
                              degree=degree)
 
 
-if __name__ == '__main__':
-    crowl("https://ja.wikipedia.org/wiki/Pok%C3%A9mon_GO", degree=1)
-    with open("result.csv", "w") as fh:
-        for info in INFOS:
-            fh.write(",".join([info.url, str(info.degree), info.body, "\n"]))
