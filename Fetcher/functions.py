@@ -15,9 +15,10 @@ file_handler.setLevel(logging.DEBUG)
 logger.addHandler(file_handler)
 logger.addHandler(stream_handler)
 
+import multiprocessing as mp
+
 pageinfo = namedtuple("pageinfo", ["url", "degree", "body"])
 
-INFOS = set()
 WIKI_PATTERN = re.compile("^(/wiki/)((?!:).)*$")
 URLS = set()
 
@@ -26,7 +27,7 @@ def _extractcontent(html):
     return html.get_text().replace(' ', '').replace("\n", '').replace("　", '')
 
 
-def crowl(url, degree=2):
+def crowl(url, q, degree=2):
     """特定のhtmlから全てのリンクを取得する
 
     Args:
@@ -35,7 +36,6 @@ def crowl(url, degree=2):
         set (str): リンク先のurl
     """
     global URLS
-    global INFOS
 
     result = requests.get(url)
     html = result.text
@@ -44,7 +44,7 @@ def crowl(url, degree=2):
     body_content = bsObj.find("div", {"id": "bodyContent"})
 
     content = _extractcontent(body_content)
-    INFOS.add(pageinfo(url, degree, content))
+    q.put(pageinfo(url, degree, content))
 
     if degree == 0:
         return
@@ -57,6 +57,7 @@ def crowl(url, degree=2):
                 logger.info("found new page {} !!".format(new_url))
                 URLS.add(new_url)
                 crowl("http://ja.wikipedia.org{}".format(new_url),
-                             degree=degree)
+                      q=q,
+                      degree=degree)
 
 

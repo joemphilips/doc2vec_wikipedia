@@ -1,6 +1,7 @@
 #!usr/bin/env python
 # -*- coding: utf-8 -*-
 from Fetcher.functions import *
+import multiprocessing as mp
 """main entry point for Fetcher
 
 `__main__.py`を書くとすると、パッケージを(import用のモジュールではなく)
@@ -13,8 +14,16 @@ from Fetcher.functions import *
 を用いることはアンチパターンです。
 """
 
-if __name__ == '__main__':
-    crowl("https://ja.wikipedia.org/wiki/Pok%C3%A9mon_GO", degree=2)
-    with open("result.csv", "w") as fh:
-        for info in INFOS:
+
+def write_to_file(filename, q):
+    with open(filename, "w") as fh:
+        while True:
+            info = q.get(timeout = 20)
             fh.write(",".join([info.url, str(info.degree), info.body, "\n"]))
+if __name__ == '__main__':
+    q = mp.Queue()
+    p = mp.Process(target=write_to_file,
+                   args=("/mnt/ebs/tmp/result.csv", q))
+    p.start()
+    crowl("https://ja.wikipedia.org/wiki/Pok%C3%A9mon_GO", q, degree=2)
+    p.join()
