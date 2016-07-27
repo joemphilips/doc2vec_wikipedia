@@ -15,15 +15,26 @@ import multiprocessing as mp
 """
 
 
-def write_to_file(filename, q):
-    with open(filename, "w") as fh:
+def write_to_file(outputdir, resultfilename, q):
+    """
+    Args:
+        q: ``mp.queue``, which yields ``pageinfo`` object
+    """
+    with open(outputdir + resultfilename, "w") as fh:
         while True:
             info = q.get(timeout = 20)
-            fh.write(",".join([info.url, str(info.degree), info.body, "\n"]))
+            processed_text = extract_text(info.html)
+            fh.write(",".join([info.url, str(info.degree), processed_text, "\n"]))
+
+            # write raw html
+            htmlfilepath = outputdir + info.url.split("/")[-1]
+            with open(htmlfilepath + ".html", "w") as htmlfh:
+                htmlfh.write(info.html)
+
 if __name__ == '__main__':
     q = mp.Queue()
     p = mp.Process(target=write_to_file,
-                   args=("/mnt/ebs/tmp/result.csv", q))
+                   args=("/mnt/ebs/tmp/", "result2.csv", q))
     p.start()
     crowl("https://ja.wikipedia.org/wiki/Pok%C3%A9mon_GO", q, degree=2)
     p.join()
