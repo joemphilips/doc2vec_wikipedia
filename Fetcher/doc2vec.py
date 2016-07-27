@@ -16,7 +16,7 @@ formatter = logging.Formatter("%(asctime)s --- %(filename)s --- %(levelname)s --
 logger.setLevel(logging.DEBUG)
 stream_handler = logging.StreamHandler()
 stream_handler.setLevel(logging.INFO)
-file_handler = logging.FileHandler(filename = 'log.txt')
+file_handler = logging.FileHandler(filename = '/mnt/ebs/tmp/{}_log.txt'.format(__name__))
 file_handler.setFormatter(formatter)
 file_handler.setLevel(logging.DEBUG)
 logger.addHandler(stream_handler)
@@ -45,7 +45,7 @@ def tagged_document_generator(wiki_xml):
         if title == NoGoodTextForLearning:
             continue
         word_list = list(tokenize(cleantext))
-        logger.debug("going to make TaggedDocument from {} and {} ".format(word_list, title))
+        logger.debug("going to make TaggedDocument from {} ... and {} ".format(word_list[0:10], title))
         yield TaggedDocument(word_list, [title])
 
 
@@ -60,6 +60,9 @@ def cleanup_text(rawtext):
         title = re.search("\'\'\'.*\'\'\'", rawtext).group().replace("\'", "")
     except AttributeError as e:
         logger.debug("cound not find title for {} ".format(rawtext))
+        return (NoGoodTextForLearning, None)
+    except TypeError as e:
+        logger.error("raw text was not byte or text-like object, it was {} ".format(rawtext))
         return (NoGoodTextForLearning, None)
     cleantext =  re.sub(r"[\*|\[|\]|\{|\}\(|\)|\||\"|\']", "", rawtext) # TODO: there should be better way than this
     return (title, cleantext)
