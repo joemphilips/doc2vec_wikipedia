@@ -6,7 +6,8 @@ from gensim.corpora import MmCorpus
 from gensim.models.doc2vec import TaggedDocument
 from gensim.models import Doc2Vec
 import MeCab
-mecab = MeCab.Tagger('mecabrc')
+import re
+mecab = MeCab.Tagger('-Ochasen')
 mecab.parse("") # to avoid UnicodeDecodeError, see http://taka-say.hateblo.jp/entry/2015/06/24/183748
 from lxml import etree # since bs4 cannot parse by iterator
 import logging
@@ -14,12 +15,17 @@ logger = logging.getLogger(__name__)
 formatter = logging.Formatter("%(asctime)s --- %(filename)s --- %(levelname)s --- %(message)s")
 logger.setLevel(logging.DEBUG)
 stream_handler = logging.StreamHandler()
-stream_handler.setLevel(logging.ERROR)
+stream_handler.setLevel(logging.INFO)
 file_handler = logging.FileHandler(filename = 'log.txt')
 file_handler.setFormatter(formatter)
 file_handler.setLevel(logging.DEBUG)
 logger.addHandler(stream_handler)
 logger.addHandler(file_handler)
+
+
+class NoGoodTextForLearning:
+    pass
+
 
 def make_corpus(path):
     wiki = WikiCorpus(path)
@@ -27,13 +33,36 @@ def make_corpus(path):
 
 
 def tagged_document_generator(wiki_xml):
+    logger.info("start parsing {} ...".format(wiki_xml))
     elementtree = etree.iterparse(wiki_xml)
     for i, content in enumerate(elementtree):
+        if i % 1000 == 0:
+            logger.info("parsed {} documents ...".format(i))
         event, element = content
         if not element.tag.endswith("text"):
             continue
-        word_list = list(tokenize(element.text))
-        yield TaggedDocument(word_list, [i])
+        title, cleantext = cleanup_text(element.text)
+        if title == NoGoodTextForLearning:
+            continue
+        word_list = list(tokenize(cleantext))
+        logger.debug("going to make TaggedDocument from {} and {} ".format(word_list, title))
+        yield TaggedDocument(word_list, [title])
+
+
+def cleanup_text(rawtext):
+    """
+    Examples::
+
+        >>> cleanup_text(" '''バスク語'''\n* [[バスク語]] ({{lang|eu|Euskara}}) の[[ISO 639|ISO 639-1言語コード]]")
+		... ('バスク語', " バスク語 langeuEuskara のISO 639ISO-1言語コード")
+    """
+    try:
+        title = re.search("\'\'\'.*\'\'\'", rawtext).group().replace("\'", "")
+    except AttributeError as e:
+        logger.debug("cound not find title for {} ".format(rawtext))
+        return (NoGoodTextForLearning, None)
+    cleantext =  re.sub(r"[\*|\[|\]|\{|\}\(|\)|\||\"|\']", "", rawtext) # TODO: there should be better way than this
+    return (title, cleantext)
 
 
 def apply_doc2vec(teacher_data):
@@ -43,13 +72,14 @@ def apply_doc2vec(teacher_data):
 
 
 def tokenize(text):
-    node = mecab.parseToNode(text)
+    textobj = text # to prevent segfault, see https://shogo82148.github.io/blog/2012/12/15/mecab-python/
+    node = mecab.parseToNode(textobj)
     while node:
         if node.feature.split(',')[0] == '名詞':
             try:
                 yield node.surface.lower()
             except UnicodeDecodeError as e:
-                logger.warn("there was UnicodeDecodeError when parsing".format(node.surface))
+                logger.warn("there was UnicodeDecodeError when parsing {} ".format(node.surface))
                 raise
         node = node.next
 
