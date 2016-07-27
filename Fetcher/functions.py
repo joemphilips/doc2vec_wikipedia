@@ -17,38 +17,40 @@ logger.addHandler(stream_handler)
 
 import multiprocessing as mp
 
-pageinfo = namedtuple("pageinfo", ["url", "degree", "body"])
+pageinfo = namedtuple("pageinfo", ["url", "degree", "html"])
 
 WIKI_PATTERN = re.compile("^(/wiki/)((?!:).)*$")
 URLS = set()
 
 
-def _extractcontent(html):
-    return html.get_text().replace(' ', '').replace("\n", '').replace("　", '')
+def extract_body(html):
+    bsObj = BeautifulSoup(html)
+    return bsObj.find('div', {"id": "bodyContent"})
 
+def extract_text(html):
+    body_content = extract_body(html)
+    return body_content.get_text().replace(' ', '').replace("\n", '').replace("　", '')
 
 def crowl(url, q, degree=2):
     """特定のhtmlから全てのリンクを取得する
 
     Args:
         url (str): 取得したいhtmlのurl
-    Yields:
+    Sets:
         set (str): リンク先のurl
     """
     global URLS
 
     result = requests.get(url)
     html = result.text
+    q.put(pageinfo(url, degree, html))
 
-    bsObj = BeautifulSoup(html)
-    body_content = bsObj.find("div", {"id": "bodyContent"})
-
-    content = _extractcontent(body_content)
-    q.put(pageinfo(url, degree, content))
 
     if degree == 0:
         return
     degree -= 1
+
+    body_content = extract_body(html)
 
     for link in body_content.findAll("a",  href=WIKI_PATTERN):
         if 'href' in link.attrs:
