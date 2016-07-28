@@ -34,7 +34,10 @@ def write_to_file(outputdir, resultfilename, q):
 if __name__ == '__main__':
     q = mp.Queue()
     p = mp.Process(target=write_to_file,
-                   args=("/mnt/ebs/tmp/", "result2.csv", q))
+                   args=("/mnt/ebs/english/", "result2.csv", q))
     p.start()
-    crowl("https://ja.wikipedia.org/wiki/Pok%C3%A9mon_GO", q, degree=2)
+    crowl("https://ja.wikipedia.org/wiki/Pok%C3%A9mon_GO",
+          q,
+          degree=2,
+          lang="en")
     p.join()
