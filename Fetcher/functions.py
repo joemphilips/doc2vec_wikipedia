@@ -7,13 +7,6 @@ import re
 from collections import namedtuple
 import logging
 logger = logging.getLogger(__name__)
-stream_handler = logging.StreamHandler()
-logger.setLevel(logging.DEBUG)
-stream_handler.setLevel(logging.INFO)
-file_handler = logging.FileHandler(filename='log.txt')
-file_handler.setLevel(logging.DEBUG)
-logger.addHandler(file_handler)
-logger.addHandler(stream_handler)
 
 import multiprocessing as mp
 
@@ -31,7 +24,7 @@ def extract_text(html):
     body_content = extract_body(html)
     return body_content.get_text().replace(' ', '').replace("\n", '').replace("　", '')
 
-def crowl(url, q, degree=2):
+def crowl(url, q, degree=2, lang="ja"):
     """特定のhtmlから全てのリンクを取得する
 
     Args:
@@ -58,7 +51,7 @@ def crowl(url, q, degree=2):
                 new_url = link.attrs['href']
                 logger.info("found new page {} !!".format(new_url))
                 URLS.add(new_url)
-                crowl("http://ja.wikipedia.org{}".format(new_url),
+                crowl("http://{}.wikipedia.org{}".format(lang, new_url),
                       q=q,
                       degree=degree)
 
