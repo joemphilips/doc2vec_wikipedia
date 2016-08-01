@@ -41,3 +41,41 @@ if __name__ == '__main__':
           degree=2,
           lang="en")
     p.join()
+
+
+if __name__ == '__main__':
+    import argparse
+    parser = argparse.ArgumentParser(
+        description="""
+        """)
+    parser.add_argument("--version", action='version', version='1.0')
+    parser.add_argument("in", nargs='*',
+                        required=True,
+                        help="list of input files name")
+    parser.add_argument("-o", "--out", nargs='?',
+                        const=sys.stdout, # when only -o has been given
+                        defualt=None, # when no option has been given
+                        help="output file name")
+    parser.add_argument('--verbose', '-v', action='count',
+                        help="""set this to change debug level
+                                -v:   INF0
+                                -vv:  DEBUG
+                            """)
+    import multiprocessing as mp
+    CORES = mp.cpucount - 1 if mp.cpucount() > 1 else 1
+    parser.add_argument("-c", "--cores", nargs='?',
+                        defualt=1,
+                        const=CORES,
+                        choices=range(1, CORES),
+                        type=int,
+                        help="cpu cores to use")
+
+    sub_parsers = parser.add_subparser(help="sub command help")
+    parser_a = sub_parsers.add_parser("a", help="a help")
+    parser_a.add_argument('--', help="")
+
+    parser_b = sub_parsers.add_parser("b", help="b help")
+    parser_b.add_argument('--', help="")
+    parser.add_argument("--", help="""""")
+
+    args = parser.parse_args()
