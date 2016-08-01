@@ -17,7 +17,7 @@ URLS = set()
 
 
 def extract_body(html):
-    bsObj = BeautifulSoup(html)
+    bsObj = BeautifulSoup(html, "lxml")
     return bsObj.find('div', {"id": "bodyContent"})
 
 def extract_text(html):
@@ -29,6 +29,7 @@ def crowl(url, q, degree=2, lang="ja"):
 
     Args:
         url (str): 取得したいhtmlのurl
+        q (multiprocessing.queue): pageinfo オブジェクト
     Sets:
         set (str): リンク先のurl
     """
