@@ -10,7 +10,7 @@ formatter = logging.Formatter("%(asctime)s --- %(filename)s --- %(levelname)s --
 logger.setLevel(logging.ERROR)
 stream_handler = logging.StreamHandler()
 stream_handler.setLevel(logging.DEBUG)
-file_handler = logging.FileHandler(filename = 'log.txt')
+file_handler = logging.FileHandler(filename = '{}.txt'.format(__file__))
 file_handler.setFormatter(formatter)
 file_handler.setLevel(logging.DEBUG)
 logger.addHandler(stream_handler)
@@ -42,11 +42,13 @@ def examine_haslink(html, all_link):
 
 def graph_matrix(html_file_dir="/mnt/ebs/tmp", outputfile="graph.csv"):
     all_link = get_all_link_list(html_file_dir)
-    html_file_paths = glob("/mnt/ebs/tmp" + '/*html')
+    html_file_paths = glob(html_file_dir + '/*html')
     with open(outputfile, "w") as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames = all_link)
         writer.writeheader()
         for i, html_path in enumerate(html_file_paths):
+            if i % 100 == 1:
+                logger.info("wrote {} files to {} ... ".format(i, outputfile))
             with open(html_path) as fh:
                 html = fh.read()
             has_link_or_not = examine_haslink(html, all_link)
@@ -54,4 +56,4 @@ def graph_matrix(html_file_dir="/mnt/ebs/tmp", outputfile="graph.csv"):
 
 
 if __name__ == '__main__':
-    graph_matrix()
+    graph_matrix(html_file_dir="/mnt/ebs/english", outputfile="graph_en.csv")
